@@ -44,7 +44,7 @@ class BrandProfile(Base):
     )
 
     reviews: Mapped[list["Review"]] = relationship(
-        back_populates="brand", cascade="all, delete-orphan"
+        back_populates="brand"
     )
 
     favorites: Mapped[list["Favorite"]] = relationship(

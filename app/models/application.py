@@ -83,6 +83,7 @@ class CampaignAssignment(Base):
         ForeignKey("campaign_applications.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
+        unique=True,
     )
 
     current_phase: Mapped[AssignmentPhase] = mapped_column(

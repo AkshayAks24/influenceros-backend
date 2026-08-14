@@ -65,15 +65,15 @@ class InfluencerProfile(Base):
     )
 
     applications: Mapped[list["CampaignApplication"]] = relationship(
-        back_populates="influencer", cascade="all, delete-orphan"
+        back_populates="influencer"
     )
 
     assignments: Mapped[list["CampaignAssignment"]] = relationship(
-        back_populates="influencer", cascade="all, delete-orphan"
+        back_populates="influencer"
     )
 
     reviews: Mapped[list["Review"]] = relationship(
-        back_populates="influencer", cascade="all, delete-orphan"
+        back_populates="influencer"
     )
 
     favorited_by: Mapped[list["Favorite"]] = relationship(

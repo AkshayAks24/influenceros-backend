@@ -51,20 +51,20 @@ class User(Base):
 
     # Relationship to ContentComment
     content_comments: Mapped[list["ContentComment"]] = relationship(
-        back_populates="author", cascade="all, delete-orphan"
+        back_populates="author"
     )
 
     # Relationship to StatusLog
     status_logs: Mapped[list["StatusLog"]] = relationship(
-        back_populates="actor", cascade="all, delete-orphan"
+        back_populates="actor"
     )
 
     # Relationship to Messages
     sent_messages: Mapped[list["Message"]] = relationship(
-        foreign_keys="[Message.sender_id]", back_populates="sender", cascade="all, delete-orphan"
+        foreign_keys="[Message.sender_id]", back_populates="sender"
     )
     received_messages: Mapped[list["Message"]] = relationship(
-        foreign_keys="[Message.receiver_id]", back_populates="receiver", cascade="all, delete-orphan"
+        foreign_keys="[Message.receiver_id]", back_populates="receiver"
     )
 
     # Relationship to Notifications
