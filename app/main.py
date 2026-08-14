@@ -4,6 +4,7 @@ from fastapi.responses import RedirectResponse
 
 from app.core.config import settings
 from app.core.exceptions import setup_exception_handlers
+from app.routers import auth
 
 app = FastAPI(
     title="InfluencerOS API",
@@ -21,6 +22,9 @@ app.add_middleware(
 
 # Register global exception handlers
 setup_exception_handlers(app)
+
+# Include Routers
+app.include_router(auth.router, prefix="/api/v1/auth")
 
 @app.get("/", include_in_schema=False)
 async def root():
