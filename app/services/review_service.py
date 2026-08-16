@@ -1,3 +1,4 @@
+from fastapi import HTTPException, status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -7,6 +8,19 @@ from app.schemas.influencer import ReviewCreate
 async def create_review(
     db: AsyncSession, brand_id: int, influencer_id: int, data: ReviewCreate
 ) -> Review:
+    # Check for existing review
+    existing_query = select(Review).where(
+        Review.brand_id == brand_id,
+        Review.influencer_id == influencer_id,
+        Review.campaign_id == data.campaign_id
+    )
+    result = await db.execute(existing_query)
+    if result.scalars().first():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="You have already submitted a review for this influencer on this campaign"
+        )
+
     review = Review(
         brand_id=brand_id,
         influencer_id=influencer_id,

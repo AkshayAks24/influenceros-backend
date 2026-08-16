@@ -1,3 +1,4 @@
+from fastapi import HTTPException, status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -86,6 +87,12 @@ async def get_application_by_id(db: AsyncSession, application_id: int) -> Campai
 async def update_application_status(
     db: AsyncSession, application: CampaignApplication, status_update: ApplicationStatusUpdate
 ) -> CampaignApplication:
+    if application.status != ApplicationStatus.pending:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This application has already been decided and cannot be changed"
+        )
+
     # We expect application to have influencer and campaign eager loaded
     application.status = ApplicationStatus(status_update.status)
     

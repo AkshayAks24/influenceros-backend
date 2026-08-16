@@ -9,6 +9,7 @@ from app.services.brand_service import get_brand_profile_by_user_id
 from app.services.influencer_service import get_influencer_by_id
 from app.services.campaign_service import get_campaign_by_id
 from app.services.review_service import create_review, get_reviews_by_influencer
+from app.services.deliverable_service import is_influencer_assigned_to_campaign
 
 router = APIRouter(tags=["Reviews"])
 
@@ -39,10 +40,16 @@ async def add_review(
     if not influencer:
         raise HTTPException(status_code=404, detail="Influencer not found")
         
-    if data.campaign_id:
-        campaign = await get_campaign_by_id(db, data.campaign_id)
-        if not campaign:
-            raise HTTPException(status_code=404, detail="Campaign not found")
+    campaign = await get_campaign_by_id(db, data.campaign_id)
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+        
+    if campaign.brand_id != brand.id:
+        raise HTTPException(status_code=403, detail="Not authorized to review an influencer for a campaign you do not own")
+        
+    is_assigned = await is_influencer_assigned_to_campaign(db, influencer.id, campaign.id)
+    if not is_assigned:
+        raise HTTPException(status_code=403, detail="Influencer was not assigned to this campaign")
         
     return await create_review(db, brand.id, id, data)
 

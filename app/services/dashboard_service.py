@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.campaign import Campaign, CampaignStatus
-from app.models.application import CampaignAssignment, CampaignApplication
+from app.models.application import CampaignAssignment, CampaignApplication, ApplicationStatus
 from app.models.influencer import InfluencerProfile
 from app.models.metric_snapshot import MetricSnapshot, OwnerType
 
@@ -112,7 +112,7 @@ async def get_influencer_dashboard_stats(db: AsyncSession, influencer_id: int):
     # pending invites (approx by pending applications)
     pending_query = select(func.count(CampaignApplication.id)).where(
         CampaignApplication.influencer_id == influencer_id,
-        CampaignApplication.status == "pending"
+        CampaignApplication.status == ApplicationStatus.pending
     )
     pending_invites = (await db.execute(pending_query)).scalar() or 0
     
@@ -155,7 +155,7 @@ async def get_influencer_dashboard_stats(db: AsyncSession, influencer_id: int):
                     this_month_earnings += share
                 
                 monthly_earnings_map[end_month] = monthly_earnings_map.get(end_month, 0) + share
-            else:
+            elif c.status in (CampaignStatus.in_progress, CampaignStatus.in_review, CampaignStatus.open):
                 pending_payout += share
                 
         earnings_by_month = [{"month": k, "value": float(v)} for k, v in sorted(monthly_earnings_map.items())]

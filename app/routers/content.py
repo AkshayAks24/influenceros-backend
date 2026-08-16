@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, require_role
 from app.db.database import get_db
 from app.models.user import User
 from app.models.content import ContentComment
@@ -25,7 +25,8 @@ router = APIRouter(tags=["Content"])
     "/assignments/{id}/content",
     response_model=SubmittedContentResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Submit content for an assignment"
+    summary="Submit content for an assignment",
+    dependencies=[Depends(require_role("influencer"))]
 )
 async def create_content_submission(
     id: int,
@@ -33,10 +34,6 @@ async def create_content_submission(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    user_role = current_user.role.value if hasattr(current_user.role, 'value') else current_user.role
-    if user_role != "influencer":
-        raise HTTPException(status_code=403, detail="Only influencers can submit content")
-        
     influencer = await get_influencer_profile_by_user_id(db, current_user.id)
     if not influencer:
         raise HTTPException(status_code=403, detail="Influencer profile required")
@@ -86,7 +83,8 @@ async def list_assignment_content(
 @router.patch(
     "/content/{id}/review",
     response_model=SubmittedContentResponse,
-    summary="Review submitted content"
+    summary="Review submitted content",
+    dependencies=[Depends(require_role("brand"))]
 )
 async def review_submitted_content(
     id: int,
@@ -94,10 +92,6 @@ async def review_submitted_content(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    user_role = current_user.role.value if hasattr(current_user.role, 'value') else current_user.role
-    if user_role != "brand":
-        raise HTTPException(status_code=403, detail="Only brands can review content")
-        
     content = await get_content_by_id(db, id)
     if not content:
         raise HTTPException(status_code=404, detail="Content not found")

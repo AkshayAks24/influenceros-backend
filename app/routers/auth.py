@@ -42,12 +42,12 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
     response_model=TokenResponse,
     summary="Login and get token"
 )
-async def login(request: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
+async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
     """
-    Authenticate a user with their email (in the username field) and password.
+    Authenticate a user with their email and password.
     Returns the user data and a fresh JWT access token.
     """
-    user = await authenticate_user(db, request.username, request.password)
+    user = await authenticate_user(db, request.email, request.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

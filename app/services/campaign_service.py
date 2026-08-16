@@ -26,7 +26,8 @@ async def get_campaigns(
     category: str | None = None,
     brand_id: int | None = None,
     page: int = 1,
-    limit: int = 20
+    limit: int = 20,
+    current_brand_id: int | None = None
 ) -> dict:
     query = select(Campaign).options(selectinload(Campaign.brand))
     
@@ -36,6 +37,17 @@ async def get_campaigns(
         query = query.where(Campaign.category == category)
     if brand_id:
         query = query.where(Campaign.brand_id == brand_id)
+        
+    from sqlalchemy import or_
+    if current_brand_id:
+        query = query.where(
+            or_(
+                Campaign.status != CampaignStatus.draft,
+                Campaign.brand_id == current_brand_id
+            )
+        )
+    else:
+        query = query.where(Campaign.status != CampaignStatus.draft)
         
     count_query = select(func.count()).select_from(query.subquery())
     total = (await db.execute(count_query)).scalar() or 0

@@ -5,6 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from app.models.content import SubmittedContent, ContentStatus, ContentComment
 from app.models.application import CampaignAssignment, AssignmentPhase
+from app.models.notification import Notification, NotificationType
 from app.schemas.content import SubmittedContentCreate, ContentReviewRequest
 
 
@@ -52,7 +53,9 @@ async def get_content_by_id(db: AsyncSession, content_id: int) -> SubmittedConte
         .where(SubmittedContent.id == content_id)
         .options(
             selectinload(SubmittedContent.assignment)
-            .selectinload(CampaignAssignment.campaign)
+            .selectinload(CampaignAssignment.campaign),
+            selectinload(SubmittedContent.assignment)
+            .selectinload(CampaignAssignment.influencer)
         )
     )
     result = await db.execute(query)
@@ -67,6 +70,21 @@ async def review_content(
     
     if review_data.decision == "approved":
         content.assignment.current_phase = AssignmentPhase.approved
+        
+    # Create notification for the influencer
+    campaign_title = content.assignment.campaign.title
+    if review_data.decision == "approved":
+        message = f"Your content for '{campaign_title}' was approved!"
+    else:
+        message = f"Changes were requested on your content for '{campaign_title}'."
+        
+    notification = Notification(
+        user_id=content.assignment.influencer.user_id,
+        title="Content Review",
+        message=message,
+        type=NotificationType.campaign_update
+    )
+    db.add(notification)
         
     await db.commit()
     await db.refresh(content)

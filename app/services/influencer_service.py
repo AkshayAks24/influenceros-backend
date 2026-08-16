@@ -1,5 +1,6 @@
 from typing import Literal
 
+from fastapi import HTTPException, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -50,6 +51,11 @@ async def get_influencers(
         query = query.where(InfluencerProfile.location.ilike(f"%{location}%"))
         
     if platform:
+        if platform not in ["instagram", "youtube", "tiktok"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid platform: {platform}. Must be instagram, youtube, or tiktok."
+            )
         # Use MySQL json_extract to check if the platform key exists in the JSON object
         query = query.where(
             func.json_extract(InfluencerProfile.platforms, f'$.{platform}').is_not(None)

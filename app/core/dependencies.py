@@ -13,7 +13,7 @@ from app.db.database import get_db
 from app.models.user import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
-
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -34,10 +34,12 @@ async def get_current_user(
         user_id: str | None = payload.get("sub")
         if user_id is None:
             raise credentials_exception
+            
+        parsed_user_id = int(user_id)
     except ValueError:
         raise credentials_exception
 
-    result = await db.execute(select(User).where(User.id == int(user_id)))
+    result = await db.execute(select(User).where(User.id == parsed_user_id))
     user = result.scalars().first()
     
     if user is None:
@@ -45,6 +47,25 @@ async def get_current_user(
         
     return user
 
+
+async def get_current_user_optional(
+    token: str | None = Depends(oauth2_scheme_optional),
+    db: AsyncSession = Depends(get_db)
+) -> User | None:
+    if not token:
+        return None
+    try:
+        payload = decode_access_token(token)
+        user_id: str | None = payload.get("sub")
+        if user_id is None:
+            return None
+            
+        parsed_user_id = int(user_id)
+    except ValueError:
+        return None
+
+    result = await db.execute(select(User).where(User.id == parsed_user_id))
+    return result.scalars().first()
 
 def require_role(*roles: str) -> Callable:
     """

@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.core.dependencies import get_current_user, require_role
+from app.core.dependencies import get_current_user, get_current_user_optional, require_role
 from app.db.database import get_db
 from app.models.user import User
 from app.models.campaign import CampaignStatus
@@ -105,6 +105,9 @@ async def apply_to_campaign(
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign not found")
         
+    if campaign.status != CampaignStatus.open:
+        raise HTTPException(status_code=409, detail="This campaign is not currently accepting applications")
+        
     influencer = await get_influencer_profile_by_user_id(db, current_user.id)
     if not influencer:
         raise HTTPException(status_code=403, detail="Influencer profile required to apply")
@@ -193,9 +196,16 @@ async def list_campaigns(
     brand_id: int | None = Query(None, description="Filter by brand"),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
+    current_user: User | None = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
-    return await get_campaigns(db, status, category, brand_id, page, limit)
+    current_brand_id = None
+    if current_user and current_user.role == "brand":
+        brand = await get_brand_profile_by_user_id(db, current_user.id)
+        if brand:
+            current_brand_id = brand.id
+            
+    return await get_campaigns(db, status, category, brand_id, page, limit, current_brand_id)
 
 
 @router.get(
@@ -203,10 +213,21 @@ async def list_campaigns(
     response_model=CampaignDetailResponse,
     summary="Get campaign details"
 )
-async def get_campaign(id: int, db: AsyncSession = Depends(get_db)):
+async def get_campaign(id: int, current_user: User | None = Depends(get_current_user_optional), db: AsyncSession = Depends(get_db)):
     campaign = await get_campaign_by_id(db, id)
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign not found")
+        
+    if campaign.status == CampaignStatus.draft:
+        is_owner = False
+        if current_user and current_user.role == "brand":
+            brand = await get_brand_profile_by_user_id(db, current_user.id)
+            if brand and campaign.brand_id == brand.id:
+                is_owner = True
+                
+        if not is_owner:
+            raise HTTPException(status_code=404, detail="Campaign not found")
+            
     return campaign
 
 
@@ -251,6 +272,9 @@ async def remove_campaign(
     brand = await get_brand_profile_by_user_id(db, current_user.id)
     if not brand or campaign.brand_id != brand.id:
         raise HTTPException(status_code=403, detail="Not authorized to delete this campaign")
+        
+    if campaign.assignments:
+        raise HTTPException(status_code=409, detail="Cannot delete a campaign with active assignments. Please set the status to cancelled instead.")
         
     await delete_campaign(db, campaign)
     return None

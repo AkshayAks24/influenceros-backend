@@ -123,4 +123,4 @@ class PortfolioItemCreate(BaseModel):
 class ReviewCreate(BaseModel):
     rating: int = Field(..., ge=1, le=5)
     comment: str | None = None
-    campaign_id: int | None = None
+    campaign_id: int

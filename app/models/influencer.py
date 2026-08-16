@@ -77,5 +77,5 @@ class InfluencerProfile(Base):
     )
 
     favorited_by: Mapped[list["Favorite"]] = relationship(
-        back_populates="influencer", cascade="all, delete-orphan"
+        back_populates="influencer"
     )
