@@ -83,8 +83,15 @@ async def add_content_comment(
     )
     db.add(comment)
     await db.commit()
-    await db.refresh(comment, ["author"])
-    return comment
+    
+    # Safely load the relationship using a new query to avoid MissingGreenlet in async mode
+    query = (
+        select(ContentComment)
+        .where(ContentComment.id == comment.id)
+        .options(selectinload(ContentComment.author))
+    )
+    result = await db.execute(query)
+    return result.scalars().first()
 
 
 async def get_content_comments(db: AsyncSession, content_id: int) -> list[ContentComment]:

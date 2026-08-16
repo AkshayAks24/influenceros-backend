@@ -14,7 +14,6 @@ async def create_review(
     )
     db.add(review)
     await db.commit()
-    await db.refresh(review)
     
     # Reload with brand relationship
     query = select(Review).where(Review.id == review.id).options(selectinload(Review.brand))

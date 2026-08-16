@@ -6,6 +6,8 @@ from app.db.database import get_db
 from app.models.user import User
 from app.schemas.influencer import ReviewCreate, ReviewResponse
 from app.services.brand_service import get_brand_profile_by_user_id
+from app.services.influencer_service import get_influencer_by_id
+from app.services.campaign_service import get_campaign_by_id
 from app.services.review_service import create_review, get_reviews_by_influencer
 
 router = APIRouter(tags=["Reviews"])
@@ -32,6 +34,15 @@ async def add_review(
     brand = await get_brand_profile_by_user_id(db, current_user.id)
     if not brand:
         raise HTTPException(status_code=404, detail="Brand profile not found")
+        
+    influencer = await get_influencer_by_id(db, id)
+    if not influencer:
+        raise HTTPException(status_code=404, detail="Influencer not found")
+        
+    if data.campaign_id:
+        campaign = await get_campaign_by_id(db, data.campaign_id)
+        if not campaign:
+            raise HTTPException(status_code=404, detail="Campaign not found")
         
     return await create_review(db, brand.id, id, data)
 

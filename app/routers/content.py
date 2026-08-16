@@ -33,7 +33,8 @@ async def create_content_submission(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    if current_user.role != "influencer":
+    user_role = current_user.role.value if hasattr(current_user.role, 'value') else current_user.role
+    if user_role != "influencer":
         raise HTTPException(status_code=403, detail="Only influencers can submit content")
         
     influencer = await get_influencer_profile_by_user_id(db, current_user.id)
@@ -66,11 +67,12 @@ async def list_assignment_content(
         
     # Verify permissions: current user must be the assigned influencer or the owning brand
     authorized = False
-    if current_user.role == "influencer":
+    user_role = current_user.role.value if hasattr(current_user.role, 'value') else current_user.role
+    if user_role == "influencer":
         influencer = await get_influencer_profile_by_user_id(db, current_user.id)
         if influencer and assignment.influencer_id == influencer.id:
             authorized = True
-    elif current_user.role == "brand":
+    elif user_role == "brand":
         brand = await get_brand_profile_by_user_id(db, current_user.id)
         if brand and assignment.campaign.brand_id == brand.id:
             authorized = True
@@ -92,7 +94,8 @@ async def review_submitted_content(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    if current_user.role != "brand":
+    user_role = current_user.role.value if hasattr(current_user.role, 'value') else current_user.role
+    if user_role != "brand":
         raise HTTPException(status_code=403, detail="Only brands can review content")
         
     content = await get_content_by_id(db, id)
@@ -132,11 +135,12 @@ async def create_content_comment(
         raise HTTPException(status_code=404, detail="Content not found")
         
     authorized = False
-    if current_user.role == "brand":
+    user_role = current_user.role.value if hasattr(current_user.role, 'value') else current_user.role
+    if user_role == "brand":
         brand = await get_brand_profile_by_user_id(db, current_user.id)
         if brand and content.assignment.campaign.brand_id == brand.id:
             authorized = True
-    elif current_user.role == "influencer":
+    elif user_role == "influencer":
         influencer = await get_influencer_profile_by_user_id(db, current_user.id)
         if influencer and content.assignment.influencer_id == influencer.id:
             authorized = True
@@ -162,11 +166,12 @@ async def list_content_comments(
         raise HTTPException(status_code=404, detail="Content not found")
         
     authorized = False
-    if current_user.role == "brand":
+    user_role = current_user.role.value if hasattr(current_user.role, 'value') else current_user.role
+    if user_role == "brand":
         brand = await get_brand_profile_by_user_id(db, current_user.id)
         if brand and content.assignment.campaign.brand_id == brand.id:
             authorized = True
-    elif current_user.role == "influencer":
+    elif user_role == "influencer":
         influencer = await get_influencer_profile_by_user_id(db, current_user.id)
         if influencer and content.assignment.influencer_id == influencer.id:
             authorized = True
