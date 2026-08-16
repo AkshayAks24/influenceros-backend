@@ -4,7 +4,7 @@ from fastapi.responses import RedirectResponse
 
 from app.core.config import settings
 from app.core.exceptions import setup_exception_handlers
-from app.routers import auth, influencers, brands, portfolio, reviews, campaigns, deliverables, applications, content, assignments, favorites, notifications, messages, pricing
+from app.routers import auth, influencers, brands, portfolio, reviews, campaigns, deliverables, applications, content, assignments, favorites, notifications, messages, pricing, dashboard
 
 app = FastAPI(
     title="InfluencerOS API",
@@ -36,6 +36,7 @@ app.include_router(notifications.router, prefix="/api/v1/notifications")
 app.include_router(portfolio.router, prefix="/api/v1/influencers/portfolio")
 app.include_router(messages.router, prefix="/api/v1")
 app.include_router(pricing.router, prefix="/api/v1")
+app.include_router(dashboard.router, prefix="/api/v1/dashboard")
 app.include_router(content.router, prefix="/api/v1")
 app.include_router(reviews.router, prefix="/api/v1")
 
