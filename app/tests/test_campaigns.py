@@ -25,8 +25,8 @@ async def setup_influencer(influencer_client: AsyncClient):
         "engagement_rate": 0.05,
         "pricing": []
     }
-    res = await influencer_client.post("/api/v1/influencers/profile", json=profile_data)
-    assert res.status_code == 201
+    res = await influencer_client.put("/api/v1/influencers/profile", json=profile_data)
+    assert res.status_code == 200
     return {"client": influencer_client, "profile": res.json()}
 
 @pytest.mark.asyncio
@@ -45,7 +45,7 @@ async def test_brand_can_create_campaign(setup_brand: AsyncClient):
     assert res.status_code == 201
     data = res.json()
     assert data["title"] == "Test Campaign"
-    assert data["status"] == "draft"
+    assert data["status"] == "open"
 
 @pytest.mark.asyncio
 async def test_influencer_can_apply(setup_brand: AsyncClient, setup_influencer: dict):

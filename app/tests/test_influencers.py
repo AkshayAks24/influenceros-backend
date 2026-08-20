@@ -14,8 +14,8 @@ async def seeded_influencer(influencer_client: AsyncClient):
         "engagement_rate": 0.05,
         "pricing": []
     }
-    response = await influencer_client.post("/api/v1/influencers/profile", json=profile_data)
-    assert response.status_code == 201
+    response = await influencer_client.put("/api/v1/influencers/profile", json=profile_data)
+    assert response.status_code == 200
     return response.json()
 
 @pytest.mark.asyncio

@@ -55,6 +55,7 @@ class AssignmentBasicResponse(BaseModel):
     id: int
     influencer_id: int
     current_phase: AssignmentPhase
+    live_url: str | None = None
     influencer: InfluencerBasicInfo
     model_config = ConfigDict(from_attributes=True)
 

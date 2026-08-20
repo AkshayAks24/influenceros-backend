@@ -5,6 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from app.models.content import SubmittedContent, ContentStatus, ContentComment
 from app.models.application import CampaignAssignment, AssignmentPhase
+from app.models.campaign import Campaign
 from app.models.notification import Notification, NotificationType
 from app.schemas.content import SubmittedContentCreate, ContentReviewRequest
 
@@ -13,7 +14,10 @@ async def get_assignment_by_id(db: AsyncSession, assignment_id: int) -> Campaign
     query = (
         select(CampaignAssignment)
         .where(CampaignAssignment.id == assignment_id)
-        .options(selectinload(CampaignAssignment.campaign))
+        .options(
+            selectinload(CampaignAssignment.campaign).selectinload(Campaign.brand),
+            selectinload(CampaignAssignment.influencer)
+        )
     )
     result = await db.execute(query)
     return result.scalars().first()
