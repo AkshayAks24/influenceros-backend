@@ -16,13 +16,18 @@ router = APIRouter(tags=["Authentication"])
     "/register",
     response_model=TokenResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Register a new user"
-)
-async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    """
+    summary="Register a new user",
+    description="""
     Register a new brand or influencer account.
     Returns the newly created user data and a fresh JWT access token.
+    
+    **Access Level:** Public (Unauthenticated)
+    
+    **Error Codes:**
+    - `400 Bad Request`: Validation error in the request payload, or email already registered.
     """
+)
+async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db)):
     user = await register_user(db, request)
     
     # Generate JWT containing user ID and role
@@ -40,13 +45,18 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
 @router.post(
     "/login",
     response_model=TokenResponse,
-    summary="Login and get token"
-)
-async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
-    """
+    summary="Login and get token",
+    description="""
     Authenticate a user with their email and password.
     Returns the user data and a fresh JWT access token.
+    
+    **Access Level:** Public (Unauthenticated)
+    
+    **Error Codes:**
+    - `401 Unauthorized`: Incorrect email or password.
     """
+)
+async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
     user = await authenticate_user(db, request.email, request.password)
     if not user:
         raise HTTPException(
@@ -69,10 +79,15 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
 @router.get(
     "/me",
     response_model=UserResponse,
-    summary="Get current user profile"
+    summary="Get current user profile",
+    description="""
+    Fetch the currently authenticated user's details.
+    
+    **Access Level:** Any authenticated user
+    
+    **Error Codes:**
+    - `401 Unauthorized`: Missing or invalid JWT access token.
+    """
 )
 async def get_me(current_user: User = Depends(get_current_user)):
-    """
-    Fetch the currently authenticated user's details.
-    """
     return UserResponse.model_validate(current_user)

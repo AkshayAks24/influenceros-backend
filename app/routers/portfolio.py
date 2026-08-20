@@ -14,6 +14,15 @@ router = APIRouter(tags=["Portfolio"])
     response_model=PortfolioItemResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Add portfolio item",
+    description="""
+    Adds a new item (e.g., media file or external link) to the authenticated influencer's portfolio.
+    
+    **Access Level:** Influencer only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not an influencer.
+    - `404 Not Found`: The influencer profile was not found.
+    """,
     dependencies=[Depends(require_role("influencer"))]
 )
 async def add_portfolio_item(
@@ -31,6 +40,15 @@ async def add_portfolio_item(
     "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete portfolio item",
+    description="""
+    Deletes a specific portfolio item from the authenticated influencer's portfolio.
+    
+    **Access Level:** Influencer only (must own the item)
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not an influencer, or does not own the portfolio item.
+    - `404 Not Found`: The influencer profile or portfolio item was not found.
+    """,
     dependencies=[Depends(require_role("influencer"))]
 )
 async def remove_portfolio_item(

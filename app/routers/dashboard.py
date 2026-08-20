@@ -15,6 +15,14 @@ router = APIRouter(tags=["Dashboard"])
     "/brand",
     response_model=BrandDashboardResponse,
     summary="Get brand dashboard statistics",
+    description="""
+    Retrieves aggregated dashboard statistics and active campaign data for the authenticated brand.
+    
+    **Access Level:** Brand only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller does not have an active brand profile.
+    """,
     dependencies=[Depends(require_role("brand"))]
 )
 async def get_brand_dashboard(
@@ -32,6 +40,14 @@ async def get_brand_dashboard(
     "/influencer",
     response_model=InfluencerDashboardResponse,
     summary="Get influencer dashboard statistics",
+    description="""
+    Retrieves aggregated dashboard statistics and active assignment data for the authenticated influencer.
+    
+    **Access Level:** Influencer only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller does not have an active influencer profile.
+    """,
     dependencies=[Depends(require_role("influencer"))]
 )
 async def get_influencer_dashboard(

@@ -21,7 +21,22 @@ router = APIRouter(tags=["Assignments"])
 @router.patch(
     "/{id}/phase",
     response_model=AssignmentBasicResponse,
-    summary="Update assignment phase"
+    summary="Update assignment phase",
+    description="""
+    Updates the phase of a campaign assignment.
+    - `brief_sent` -> `content_creation`: Influencer accepts the brief.
+    - `live` -> `completed`: Brand marks the assignment as completed.
+    
+    If all assignments for a campaign are completed, the overall campaign status is also marked as completed.
+    
+    **Access Level:** Both Brands and Influencers (role-specific restrictions apply per phase transition)
+    
+    **Error Codes:**
+    - `400 Bad Request`: Invalid phase transition via this endpoint.
+    - `403 Forbidden`: The caller is not authorized to update the assignment (e.g., wrong role or not the owner).
+    - `404 Not Found`: The assignment was not found.
+    - `409 Conflict`: The transition is invalid from the current phase (e.g., trying to complete an assignment that isn't live).
+    """
 )
 async def update_assignment_phase(
     id: int,
@@ -118,7 +133,19 @@ async def update_assignment_phase(
 @router.post(
     "/{id}/live-url",
     response_model=AssignmentBasicResponse,
-    summary="Submit live post URL"
+    summary="Submit live post URL",
+    description="""
+    Submits the URL of the live social media post for an approved assignment.
+    This transitions the assignment phase from `approved` to `live`.
+    
+    **Access Level:** Influencer only (must be the assigned influencer)
+    
+    **Error Codes:**
+    - `400 Bad Request`: The URL is empty or improperly formatted.
+    - `403 Forbidden`: The caller is not an influencer, or is not the assigned influencer for this assignment.
+    - `404 Not Found`: The assignment was not found.
+    - `409 Conflict`: The assignment is not in the `approved` phase.
+    """
 )
 async def submit_live_url(
     id: int,

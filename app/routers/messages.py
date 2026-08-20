@@ -16,7 +16,14 @@ router = APIRouter(tags=["Messages"])
 @router.get(
     "/conversations",
     response_model=list[ConversationSummary],
-    summary="Get user conversations"
+    summary="Get user conversations",
+    description="""
+    Retrieves a list of all active conversations for the authenticated user, summarizing the latest message and unread counts.
+    
+    **Access Level:** Any authenticated user
+    
+    **Error Codes:** None specific to this endpoint.
+    """
 )
 async def list_conversations(
     current_user: User = Depends(get_current_user),
@@ -27,7 +34,14 @@ async def list_conversations(
 @router.get(
     "/conversations/{other_user_id}/messages",
     response_model=list[MessageResponse],
-    summary="Get conversation messages"
+    summary="Get conversation messages",
+    description="""
+    Retrieves the full message history between the authenticated user and another specified user.
+    
+    **Access Level:** Any authenticated user
+    
+    **Error Codes:** None specific to this endpoint.
+    """
 )
 async def get_conversation_messages(
     other_user_id: int,
@@ -40,7 +54,16 @@ async def get_conversation_messages(
     "/messages",
     response_model=MessageResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Send a message"
+    summary="Send a message",
+    description="""
+    Sends a direct message to another user.
+    
+    **Access Level:** Any authenticated user
+    
+    **Error Codes:**
+    - `400 Bad Request`: The user attempted to send a message to themselves.
+    - `404 Not Found`: The specified receiver user does not exist.
+    """
 )
 async def send_message(
     data: MessageCreate,

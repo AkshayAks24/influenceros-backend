@@ -11,7 +11,14 @@ router = APIRouter(tags=["Pricing"])
 @router.get(
     "/pricing-plans",
     response_model=list[PricingPlanResponse],
-    summary="Get all pricing plans"
+    summary="Get all pricing plans",
+    description="""
+    Retrieves all available subscription pricing plans, ordered by price ascending.
+    
+    **Access Level:** Public (Unauthenticated)
+    
+    **Error Codes:** None specific to this endpoint.
+    """
 )
 async def list_pricing_plans(db: AsyncSession = Depends(get_db)):
     query = select(PricingPlan).order_by(PricingPlan.price.asc())

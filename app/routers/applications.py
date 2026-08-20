@@ -14,6 +14,17 @@ router = APIRouter(tags=["Applications"])
     "/{id}/status",
     response_model=ApplicationResponse,
     summary="Update application status",
+    description="""
+    Accepts or rejects an influencer's application for a campaign.
+    If accepted, it automatically creates a CampaignAssignment and notifies the influencer.
+    If rejected, it simply updates the status and notifies the influencer.
+    
+    **Access Level:** Brand only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not a brand, or does not own the campaign associated with the application.
+    - `404 Not Found`: The application was not found.
+    """,
     dependencies=[Depends(require_role("brand"))]
 )
 async def update_status(

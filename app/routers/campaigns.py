@@ -50,6 +50,14 @@ class PaginatedApplicationResponse(BaseModel):
     response_model=CampaignDetailResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new campaign",
+    description="""
+    Creates a new campaign for the authenticated brand.
+    
+    **Access Level:** Brand only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not a brand.
+    """,
     dependencies=[Depends(require_role("brand"))]
 )
 async def create_new_campaign(
@@ -69,6 +77,15 @@ async def create_new_campaign(
     response_model=DeliverableResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Add a deliverable to a campaign",
+    description="""
+    Adds a new deliverable requirement (e.g., TikTok Video, Instagram Post) to an existing campaign.
+    
+    **Access Level:** Brand only (must own the campaign)
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not a brand, or does not own the campaign.
+    - `404 Not Found`: The campaign was not found.
+    """,
     dependencies=[Depends(require_role("brand"))]
 )
 async def add_deliverable(
@@ -93,6 +110,16 @@ async def add_deliverable(
     response_model=ApplicationResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Apply to a campaign",
+    description="""
+    Submits an application from an influencer to a specific open campaign.
+    
+    **Access Level:** Influencer only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not an influencer.
+    - `404 Not Found`: The campaign was not found.
+    - `409 Conflict`: The campaign is not open for applications, or the influencer has already applied.
+    """,
     dependencies=[Depends(require_role("influencer"))]
 )
 async def apply_to_campaign(
@@ -123,6 +150,15 @@ async def apply_to_campaign(
     "/{id}/applications",
     response_model=PaginatedApplicationResponse,
     summary="Get campaign applications",
+    description="""
+    Retrieves a paginated list of all applications for a specific campaign.
+    
+    **Access Level:** Brand only (must own the campaign)
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not a brand, or does not own the campaign.
+    - `404 Not Found`: The campaign was not found.
+    """,
     dependencies=[Depends(require_role("brand"))]
 )
 async def get_campaign_applications(
@@ -146,7 +182,16 @@ async def get_campaign_applications(
 @router.get(
     "/{id}/activity-log",
     response_model=list[StatusLogResponse],
-    summary="Get campaign activity log"
+    summary="Get campaign activity log",
+    description="""
+    Retrieves the activity log (status changes, review actions, etc.) for a campaign.
+    
+    **Access Level:** Brand (must own campaign) or Influencer (must be assigned to the campaign)
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not authorized to view the activity log for this campaign.
+    - `404 Not Found`: The campaign was not found.
+    """
 )
 async def get_campaign_activity_log(
     id: int,
@@ -188,7 +233,14 @@ async def get_campaign_activity_log(
 @router.get(
     "",
     response_model=PaginatedCampaignResponse,
-    summary="List campaigns"
+    summary="List campaigns",
+    description="""
+    Retrieves a paginated list of public campaigns. If an authenticated brand calls this, it may include their own draft campaigns.
+    
+    **Access Level:** Public / Any authenticated user
+    
+    **Error Codes:** None specific to this endpoint.
+    """
 )
 async def list_campaigns(
     status: CampaignStatus | None = None,
@@ -211,7 +263,16 @@ async def list_campaigns(
 @router.get(
     "/{id}",
     response_model=CampaignDetailResponse,
-    summary="Get campaign details"
+    summary="Get campaign details",
+    description="""
+    Retrieves detailed information about a specific campaign, including deliverables and assignments.
+    Draft campaigns are only visible to the brand that owns them.
+    
+    **Access Level:** Public / Any authenticated user (with ownership restrictions for drafts)
+    
+    **Error Codes:**
+    - `404 Not Found`: The campaign was not found, or it is a draft owned by someone else.
+    """
 )
 async def get_campaign(id: int, current_user: User | None = Depends(get_current_user_optional), db: AsyncSession = Depends(get_db)):
     campaign = await get_campaign_by_id(db, id)
@@ -235,6 +296,15 @@ async def get_campaign(id: int, current_user: User | None = Depends(get_current_
     "/{id}",
     response_model=CampaignDetailResponse,
     summary="Update a campaign",
+    description="""
+    Updates the details or status of an existing campaign.
+    
+    **Access Level:** Brand only (must own the campaign)
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not a brand, or does not own the campaign.
+    - `404 Not Found`: The campaign was not found.
+    """,
     dependencies=[Depends(require_role("brand"))]
 )
 async def edit_campaign(
@@ -258,6 +328,16 @@ async def edit_campaign(
     "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a campaign",
+    description="""
+    Permanently deletes a campaign. 
+    
+    **Access Level:** Brand only (must own the campaign)
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not a brand, or does not own the campaign.
+    - `404 Not Found`: The campaign was not found.
+    - `409 Conflict`: The campaign cannot be deleted because it has active assignments (should be cancelled instead).
+    """,
     dependencies=[Depends(require_role("brand"))]
 )
 async def remove_campaign(

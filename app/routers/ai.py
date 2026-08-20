@@ -25,6 +25,15 @@ router = APIRouter(tags=["AI Integration"])
     "/influencer-match",
     response_model=list[InfluencerMatchResponse],
     summary="Get AI-powered influencer matches for a campaign",
+    description="""
+    Retrieves a list of suggested influencers for a specific campaign using AI matching.
+    
+    **Access Level:** Brand only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller does not have a brand profile, or they do not own the specified campaign.
+    - `404 Not Found`: The specified campaign was not found.
+    """,
     dependencies=[Depends(require_role("brand"))]
 )
 async def match_influencers(
@@ -49,6 +58,14 @@ async def match_influencers(
     "/campaign-suggestions",
     response_model=CampaignSuggestionResponse,
     summary="Get AI-powered campaign content suggestions",
+    description="""
+    Generates AI-powered campaign content ideas and suggestions based on a given category.
+    
+    **Access Level:** Brand only
+    
+    **Error Codes:**
+    - `422 Unprocessable Entity`: The request body is invalid.
+    """,
     dependencies=[Depends(require_role("brand"))]
 )
 async def suggest_campaign_ideas(
@@ -61,6 +78,14 @@ async def suggest_campaign_ideas(
     "/profile-insights",
     response_model=ProfileInsightResponse,
     summary="Get AI-powered profile insights",
+    description="""
+    Analyzes the influencer's profile data and provides AI-generated insights for growth.
+    
+    **Access Level:** Influencer only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller does not have an active influencer profile.
+    """,
     dependencies=[Depends(require_role("influencer"))]
 )
 async def profile_insights(

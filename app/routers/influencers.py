@@ -26,7 +26,18 @@ class PaginatedInfluencerResponse(BaseModel):
     limit: int
 
 
-@router.get("", response_model=PaginatedInfluencerResponse, summary="Discover influencers")
+@router.get(
+    "", 
+    response_model=PaginatedInfluencerResponse, 
+    summary="Discover influencers",
+    description="""
+    Retrieves a paginated list of influencers for the discovery grid, with optional filtering and sorting.
+    
+    **Access Level:** Public / Any authenticated user
+    
+    **Error Codes:** None specific to this endpoint.
+    """
+)
 async def discover_influencers(
     search: str | None = Query(None, description="Search by username, bio, or category"),
     category: str | None = Query(None, description="Filter by category"),
@@ -68,6 +79,15 @@ async def discover_influencers(
     response_model=InfluencerDetailResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create influencer profile",
+    description="""
+    Creates the current influencer's public profile.
+    
+    **Access Level:** Influencer only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not an influencer.
+    - `409 Conflict`: A profile already exists for this user.
+    """,
     dependencies=[Depends(require_role("influencer"))]
 )
 async def create_profile(
@@ -75,7 +95,6 @@ async def create_profile(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Creates the current influencer's profile."""
     profile = await create_influencer_profile(db, current_user.id, data)
     if not profile:
         raise HTTPException(
@@ -89,6 +108,15 @@ async def create_profile(
     "/profile",
     response_model=InfluencerDetailResponse,
     summary="Update influencer profile",
+    description="""
+    Updates the current influencer's public profile.
+    
+    **Access Level:** Influencer only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not an influencer.
+    - `404 Not Found`: The influencer profile was not found.
+    """,
     dependencies=[Depends(require_role("influencer"))]
 )
 async def update_profile(
@@ -96,7 +124,6 @@ async def update_profile(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Updates the current influencer's profile."""
     profile = await update_influencer_profile(db, current_user.id, data)
     if not profile:
         raise HTTPException(
@@ -110,13 +137,21 @@ async def update_profile(
     "/me",
     response_model=InfluencerDetailResponse,
     summary="Get my influencer profile",
+    description="""
+    Fetches the currently authenticated influencer's profile details.
+    
+    **Access Level:** Influencer only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not an influencer.
+    - `404 Not Found`: The influencer profile was not found.
+    """,
     dependencies=[Depends(require_role("influencer"))]
 )
 async def get_my_profile(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Fetches the currently authenticated influencer's profile."""
     profile = await get_influencer_profile_by_user_id(db, current_user.id)
     if not profile:
         raise HTTPException(
@@ -129,12 +164,17 @@ async def get_my_profile(
 @router.get(
     "/{id}",
     response_model=InfluencerDetailResponse,
-    summary="Get influencer details"
+    summary="Get influencer details",
+    description="""
+    Fetches a detailed influencer profile including portfolios and reviews.
+    
+    **Access Level:** Public / Any authenticated user
+    
+    **Error Codes:**
+    - `404 Not Found`: The influencer was not found.
+    """
 )
 async def get_influencer(id: int, db: AsyncSession = Depends(get_db)):
-    """
-    Fetch a detailed influencer profile including portfolios and reviews.
-    """
     influencer = await get_influencer_by_id(db, id)
     if not influencer:
         raise HTTPException(

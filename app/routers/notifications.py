@@ -18,7 +18,14 @@ router = APIRouter(tags=["Notifications"])
 @router.get(
     "",
     response_model=PaginatedNotificationResponse,
-    summary="Get user notifications"
+    summary="Get user notifications",
+    description="""
+    Retrieves a paginated list of notifications for the authenticated user, optionally filtered by type or read status.
+    
+    **Access Level:** Any authenticated user
+    
+    **Error Codes:** None specific to this endpoint.
+    """
 )
 async def list_notifications(
     type: NotificationType | None = None,
@@ -32,7 +39,14 @@ async def list_notifications(
 
 @router.patch(
     "/read-all",
-    summary="Mark all notifications as read"
+    summary="Mark all notifications as read",
+    description="""
+    Marks all unread notifications as read for the authenticated user.
+    
+    **Access Level:** Any authenticated user
+    
+    **Error Codes:** None specific to this endpoint.
+    """
 )
 async def read_all_notifications(
     current_user: User = Depends(get_current_user),
@@ -44,7 +58,16 @@ async def read_all_notifications(
 @router.patch(
     "/{id}/read",
     response_model=NotificationResponse,
-    summary="Mark notification as read"
+    summary="Mark notification as read",
+    description="""
+    Marks a specific notification as read.
+    
+    **Access Level:** Any authenticated user
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller does not own the specified notification.
+    - `404 Not Found`: The notification was not found.
+    """
 )
 async def read_notification(
     id: int,

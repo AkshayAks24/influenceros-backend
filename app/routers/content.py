@@ -26,6 +26,17 @@ router = APIRouter(tags=["Content"])
     response_model=SubmittedContentResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Submit content for an assignment",
+    description="""
+    Submits draft content for a specific campaign assignment.
+    This automatically transitions the assignment phase to `review`.
+    
+    **Access Level:** Influencer only (must be the assigned influencer)
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not an influencer, or is not the assigned influencer for this assignment.
+    - `404 Not Found`: The assignment was not found.
+    - `409 Conflict`: The assignment is not in the `content_creation` phase.
+    """,
     dependencies=[Depends(require_role("influencer"))]
 )
 async def create_content_submission(
@@ -51,7 +62,16 @@ async def create_content_submission(
 @router.get(
     "/assignments/{id}/content",
     response_model=list[SubmittedContentResponse],
-    summary="List content for an assignment"
+    summary="List content for an assignment",
+    description="""
+    Retrieves a list of all content submitted for a specific assignment, ordered from newest to oldest.
+    
+    **Access Level:** Brand (must own campaign) or Influencer (must be assigned)
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not authorized to view this assignment's content.
+    - `404 Not Found`: The assignment was not found.
+    """
 )
 async def list_assignment_content(
     id: int,
@@ -84,6 +104,17 @@ async def list_assignment_content(
     "/content/{id}/review",
     response_model=SubmittedContentResponse,
     summary="Review submitted content",
+    description="""
+    Reviews draft content submitted by an influencer.
+    The brand can either `approve` or request `changes_requested`.
+    
+    **Access Level:** Brand only (must own the campaign)
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not a brand, or does not own the campaign associated with the content.
+    - `404 Not Found`: The submitted content was not found.
+    - `409 Conflict`: The assignment is not in the `review` phase.
+    """,
     dependencies=[Depends(require_role("brand"))]
 )
 async def review_submitted_content(
@@ -116,7 +147,16 @@ async def review_submitted_content(
     "/content/{id}/comments",
     response_model=CommentResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Add a comment to submitted content"
+    summary="Add a comment to submitted content",
+    description="""
+    Adds a comment to a specific piece of submitted content.
+    
+    **Access Level:** Brand (must own campaign) or Influencer (must be assigned)
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not authorized to comment on this content.
+    - `404 Not Found`: The submitted content was not found.
+    """
 )
 async def create_content_comment(
     id: int,
@@ -148,7 +188,16 @@ async def create_content_comment(
 @router.get(
     "/content/{id}/comments",
     response_model=list[CommentResponse],
-    summary="List comments for submitted content"
+    summary="List comments for submitted content",
+    description="""
+    Retrieves all comments associated with a specific piece of submitted content.
+    
+    **Access Level:** Brand (must own campaign) or Influencer (must be assigned)
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not authorized to view comments for this content.
+    - `404 Not Found`: The submitted content was not found.
+    """
 )
 async def list_content_comments(
     id: int,

@@ -24,6 +24,15 @@ class PaginatedReviewResponse(BaseModel):
     response_model=ReviewResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Submit a review",
+    description="""
+    Submits a rating and review for an influencer that participated in a specific campaign.
+    
+    **Access Level:** Brand only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller does not own the campaign, or the influencer was never assigned to it.
+    - `404 Not Found`: The influencer or campaign was not found.
+    """,
     dependencies=[Depends(require_role("brand"))]
 )
 async def add_review(
@@ -56,7 +65,14 @@ async def add_review(
 @router.get(
     "/influencers/{id}/reviews",
     response_model=PaginatedReviewResponse,
-    summary="Get influencer reviews"
+    summary="Get influencer reviews",
+    description="""
+    Retrieves a paginated list of reviews for a specific influencer.
+    
+    **Access Level:** Public / Any authenticated user
+    
+    **Error Codes:** None specific to this endpoint.
+    """
 )
 async def list_reviews(
     id: int,

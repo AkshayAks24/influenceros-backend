@@ -22,6 +22,16 @@ router = APIRouter(tags=["Favorites"])
     response_model=FavoriteResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Add an influencer to favorites",
+    description="""
+    Adds a specific influencer to the authenticated brand's favorites list.
+    
+    **Access Level:** Brand only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller does not have an active brand profile.
+    - `404 Not Found`: The specified influencer does not exist.
+    - `409 Conflict`: The influencer is already in the brand's favorites.
+    """,
     dependencies=[Depends(require_role("brand"))]
 )
 async def add_favorite(
@@ -47,6 +57,15 @@ async def add_favorite(
     "/{influencer_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Remove an influencer from favorites",
+    description="""
+    Removes a specific influencer from the authenticated brand's favorites list.
+    
+    **Access Level:** Brand only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller does not have an active brand profile.
+    - `404 Not Found`: The influencer is not in the brand's favorites.
+    """,
     dependencies=[Depends(require_role("brand"))]
 )
 async def remove_favorite(
@@ -69,6 +88,14 @@ async def remove_favorite(
     "",
     response_model=list[InfluencerListItem],
     summary="Get favorited influencers",
+    description="""
+    Retrieves a list of all influencers favorited by the authenticated brand.
+    
+    **Access Level:** Brand only
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller does not have an active brand profile.
+    """,
     dependencies=[Depends(require_role("brand"))]
 )
 async def list_favorites(

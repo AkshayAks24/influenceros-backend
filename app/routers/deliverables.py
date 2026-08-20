@@ -14,17 +14,22 @@ router = APIRouter(tags=["Deliverables"])
 @router.patch(
     "/{id}/toggle",
     response_model=DeliverableResponse,
-    summary="Toggle deliverable completion status"
+    summary="Toggle deliverable completion status",
+    description="""
+    Toggles the `is_completed` state of a specific deliverable.
+    
+    **Access Level:** Brand (must own the campaign) or Influencer (must be assigned to the campaign)
+    
+    **Error Codes:**
+    - `403 Forbidden`: The caller is not authorized to modify this deliverable.
+    - `404 Not Found`: The deliverable was not found.
+    """
 )
 async def toggle_deliverable(
     id: int,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Toggles the is_completed state of a deliverable.
-    Only the brand owning the campaign, or an influencer officially assigned to it, can do this.
-    """
     deliverable = await get_deliverable_by_id(db, id)
     if not deliverable:
         raise HTTPException(status_code=404, detail="Deliverable not found")
