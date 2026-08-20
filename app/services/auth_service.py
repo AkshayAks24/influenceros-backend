@@ -3,7 +3,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password, verify_password
-from app.models.user import User
+from app.models.user import User, UserRole
+from app.models.brand import BrandProfile
+from app.models.influencer import InfluencerProfile
 from app.schemas.auth import RegisterRequest
 
 
@@ -32,6 +34,23 @@ async def register_user(db: AsyncSession, data: RegisterRequest) -> User:
         role=data.role
     )
     db.add(new_user)
+    await db.flush()  # To get the new_user.id
+    
+    if data.role == UserRole.brand or data.role == "brand":
+        brand_profile = BrandProfile(
+            user_id=new_user.id,
+            company_name=data.name,
+            industry="Other"
+        )
+        db.add(brand_profile)
+    elif data.role == UserRole.influencer or data.role == "influencer":
+        influencer_profile = InfluencerProfile(
+            user_id=new_user.id,
+            username=data.name.lower().replace(" ", "") + str(new_user.id),
+            category="General"
+        )
+        db.add(influencer_profile)
+
     await db.commit()
     await db.refresh(new_user)
     return new_user

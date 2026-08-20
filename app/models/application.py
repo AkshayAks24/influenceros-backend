@@ -90,6 +90,8 @@ class CampaignAssignment(Base):
         Enum(AssignmentPhase), default=AssignmentPhase.brief_sent
     )
 
+    live_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+
     assigned_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

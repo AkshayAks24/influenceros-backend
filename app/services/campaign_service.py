@@ -11,7 +11,7 @@ from app.schemas.campaign import CampaignCreate, CampaignUpdate
 async def create_campaign(db: AsyncSession, brand_id: int, data: CampaignCreate) -> Campaign:
     campaign = Campaign(
         brand_id=brand_id,
-        status=CampaignStatus.draft,
+        status=CampaignStatus.open,
         **data.model_dump()
     )
     db.add(campaign)
