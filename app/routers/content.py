@@ -45,7 +45,7 @@ async def create_content_submission(
     if assignment.influencer_id != influencer.id:
         raise HTTPException(status_code=403, detail="Not authorized to submit content for this assignment")
         
-    return await submit_content(db, assignment, data)
+    return await submit_content(db, assignment, data, current_user.id)
 
 
 @router.get(
@@ -109,7 +109,7 @@ async def review_submitted_content(
         )
         db.add(comment)
         
-    return await review_content(db, content, data)
+    return await review_content(db, content, data, current_user.id)
 
 
 @router.post(

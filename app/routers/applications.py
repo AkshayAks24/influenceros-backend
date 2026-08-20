@@ -39,4 +39,4 @@ async def update_status(
     if application.status == data.status:
         return application
         
-    return await update_application_status(db, application, data)
+    return await update_application_status(db, application, data, current_user.id)

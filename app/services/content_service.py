@@ -20,8 +20,12 @@ async def get_assignment_by_id(db: AsyncSession, assignment_id: int) -> Campaign
 
 
 async def submit_content(
-    db: AsyncSession, assignment: CampaignAssignment, data: SubmittedContentCreate
+    db: AsyncSession, assignment: CampaignAssignment, data: SubmittedContentCreate, actor_id: int
 ) -> SubmittedContent:
+    if assignment.current_phase != AssignmentPhase.content_creation:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=409, detail=f"Cannot submit content from {assignment.current_phase}")
+
     content = SubmittedContent(
         assignment_id=assignment.id,
         status=ContentStatus.pending_review,
@@ -29,8 +33,26 @@ async def submit_content(
     )
     db.add(content)
     
-    if assignment.current_phase == AssignmentPhase.content_creation:
-        assignment.current_phase = AssignmentPhase.review
+    assignment.current_phase = AssignmentPhase.review
+    
+    from app.models.content import StatusLog
+    log = StatusLog(
+        campaign_id=assignment.campaign_id,
+        actor_id=actor_id,
+        from_status=AssignmentPhase.content_creation.value,
+        to_status=AssignmentPhase.review.value,
+        note="Influencer submitted draft content for review."
+    )
+    db.add(log)
+    
+    from app.models.notification import Notification, NotificationType
+    notif = Notification(
+        user_id=assignment.campaign.brand.user_id,
+        title="Content Submitted",
+        message=f"Influencer submitted draft content for '{assignment.campaign.title}'.",
+        type=NotificationType.campaign_update
+    )
+    db.add(notif)
         
     await db.commit()
     await db.refresh(content)
@@ -63,13 +85,37 @@ async def get_content_by_id(db: AsyncSession, content_id: int) -> SubmittedConte
 
 
 async def review_content(
-    db: AsyncSession, content: SubmittedContent, review_data: ContentReviewRequest
+    db: AsyncSession, content: SubmittedContent, review_data: ContentReviewRequest, actor_id: int
 ) -> SubmittedContent:
+    if content.assignment.current_phase != AssignmentPhase.review:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=409, detail=f"Cannot review content from {content.assignment.current_phase}")
+
     content.status = ContentStatus(review_data.decision)
     content.reviewed_at = datetime.now(timezone.utc)
     
+    from app.models.content import StatusLog
+
     if review_data.decision == "approved":
         content.assignment.current_phase = AssignmentPhase.approved
+        log = StatusLog(
+            campaign_id=content.assignment.campaign_id,
+            actor_id=actor_id,
+            from_status=AssignmentPhase.review.value,
+            to_status=AssignmentPhase.approved.value,
+            note="Brand approved content."
+        )
+        db.add(log)
+    elif review_data.decision == "changes_requested":
+        content.assignment.current_phase = AssignmentPhase.content_creation
+        log = StatusLog(
+            campaign_id=content.assignment.campaign_id,
+            actor_id=actor_id,
+            from_status=AssignmentPhase.review.value,
+            to_status=AssignmentPhase.content_creation.value,
+            note="Brand requested changes to content."
+        )
+        db.add(log)
         
     # Create notification for the influencer
     campaign_title = content.assignment.campaign.title

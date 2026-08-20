@@ -85,7 +85,7 @@ async def get_application_by_id(db: AsyncSession, application_id: int) -> Campai
 
 
 async def update_application_status(
-    db: AsyncSession, application: CampaignApplication, status_update: ApplicationStatusUpdate
+    db: AsyncSession, application: CampaignApplication, status_update: ApplicationStatusUpdate, actor_id: int
 ) -> CampaignApplication:
     if application.status != ApplicationStatus.pending:
         raise HTTPException(
@@ -117,6 +117,16 @@ async def update_application_status(
             current_phase=AssignmentPhase.brief_sent
         )
         db.add(assignment)
+        
+        from app.models.content import StatusLog
+        log = StatusLog(
+            campaign_id=application.campaign_id,
+            actor_id=actor_id,
+            from_status=None,
+            to_status=AssignmentPhase.brief_sent.value,
+            note="Brand accepted application and sent the brief."
+        )
+        db.add(log)
         
     await db.commit()
     await db.refresh(application)
